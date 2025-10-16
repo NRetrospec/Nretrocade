@@ -1,0 +1,113 @@
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// Get all games with search and filter
+export const listGames = query({
+  args: {
+    search: v.optional(v.string()),
+    category: v.optional(v.string()),
+    multiplayerOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    if (args.search) {
+      let searchQuery = ctx.db
+        .query("games")
+        .withSearchIndex("search_games", (q) => q.search("title", args.search!));
+
+      if (args.category) {
+        searchQuery = searchQuery.filter((q) => q.eq(q.field("category"), args.category));
+      }
+
+      if (args.multiplayerOnly) {
+        searchQuery = searchQuery.filter((q) => q.eq(q.field("isMultiplayer"), true));
+      }
+
+      return await searchQuery.take(50);
+    }
+
+    let query = ctx.db.query("games");
+
+    if (args.category) {
+      query = query.filter((q) => q.eq(q.field("category"), args.category));
+    }
+
+    if (args.multiplayerOnly) {
+      query = query.filter((q) => q.eq(q.field("isMultiplayer"), true));
+    }
+
+    return await query.order("desc").take(50);
+  },
+});
+
+// Get single game
+export const getGame = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.gameId);
+  },
+});
+
+// Seed some example games
+export const seedGames = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Check if games already exist
+    const existingGames = await ctx.db.query("games").take(1);
+    if (existingGames.length > 0) {
+      return "Games already seeded";
+    }
+
+    const games = [
+      {
+        title: "Bloons Tower Defense",
+        swfUrl: "https://phreshhhhh.github.io/BTD2/bloonstd2.swf",
+        thumbnail: "/thumbnails/btd.jpg",
+        description: "Strategic tower defense game",
+        tags: ["Strategy", "Defense", "Popular"],
+        isMultiplayer: false,
+        category: "Strategy",
+        difficulty: "Medium" as const,
+        playCount: 0,
+      },
+      {
+        title: "Club Penguin",
+        swfUrl: "/games/clubpenguin.swf",
+        thumbnail: "/thumbnails/clubpenguin.jpg",
+        description: "Virtual world MMO",
+        tags: ["MMO", "Social", "Adventure"],
+        isMultiplayer: true,
+        category: "Adventure",
+        difficulty: "Easy" as const,
+        playCount: 0,
+      },
+      {
+        title: "Robot Unicorn",
+        swfUrl: "/games/guitar.swf",
+        thumbnail: "/thumbnails/guitar.jpg",
+        description: "Rhythm guitar game",
+        tags: ["Music", "Rhythm", "Skill"],
+        isMultiplayer: false,
+        category: "Music",
+        difficulty: "Hard" as const,
+        playCount: 0,
+      },
+      {
+        title: "Sonny",
+        swfUrl: "https://phreshhhhh.github.io/SONNY/sonny-505817f.swf",
+        thumbnail: "/thumbnails/stickwar.jpg",
+        description: "Strategy war game",
+        tags: ["Strategy", "War", "Action"],
+        isMultiplayer: false,
+        category: "Strategy",
+        difficulty: "Medium" as const,
+        playCount: 0,
+      },
+    ];
+
+    for (const game of games) {
+      await ctx.db.insert("games", game);
+    }
+
+    return "Games seeded successfully";
+  },
+});

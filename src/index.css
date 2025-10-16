@@ -1,0 +1,176 @@
+@import 'animate.css';
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-light: #ffffff;
+  --color-dark: #171717;
+}
+
+.pixel-font {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+}
+
+.accent-text {
+  @apply text-slate-600;
+}
+
+body {
+  font-family:
+    "Inter Variable",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji";
+  color: var(--color-light);
+  background: var(--color-dark);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.7);
+}
+
+/* Retro Glow Effects */
+.neon-glow {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+}
+
+.border-glow {
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+/* Auth input and button styles */
+.auth-input-field {
+  @apply w-full px-4 py-3 rounded bg-black/50 border border-cyan-500/50 text-cyan-100 placeholder-gray-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all;
+}
+
+.auth-button {
+  @apply w-full px-4 py-3 rounded bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-semibold hover:from-cyan-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Animation for loading states */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(6, 182, 212, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.8);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Neon glow effect for buttons */
+.glow-effect {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.8);
+}
+
+/* Mobile responsive styles for LandingPage */
+@media (max-width: 640px) {
+  .landing-overlay {
+    padding: 1rem !important;
+    max-width: 90vw !important;
+  }
+
+  .landing-title {
+    font-size: 2.5rem !important;
+  }
+
+  .landing-subtitle {
+    font-size: 1rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .landing-button {
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1.125rem !important;
+  }
+
+  .flash-machine {
+    height: 50% !important;
+    max-width: 60% !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .landing-overlay {
+    padding: 2rem !important;
+    max-width: 80vw !important;
+  }
+
+  .landing-title {
+    font-size: 3.5rem !important;
+  }
+
+  .landing-subtitle {
+    font-size: 1.125rem !important;
+  }
+
+  .landing-button {
+    padding: 1rem 2rem !important;
+    font-size: 1.25rem !important;
+  }
+
+  .flash-machine {
+    height: 75% !important;
+    max-width: 50% !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .landing-overlay {
+    padding: 2.75rem !important;
+  }
+
+  .landing-title {
+    font-size: 4rem !important;
+  }
+
+  .landing-subtitle {
+    font-size: 1.25rem !important;
+  }
+
+  .landing-button {
+    padding: 1rem 2rem !important;
+    font-size: 1.25rem !important;
+  }
+
+  .flash-machine {
+    height: 100% !important;
+    max-width: 100% !important;
+  }
+}
