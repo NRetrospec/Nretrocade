@@ -59,7 +59,7 @@ export function GameList({ onSelectGame }: GameListProps) {
       </div>
 
       {/* Games List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-96">
         {games?.map((game) => (
           <div
             key={game._id}
@@ -67,7 +67,21 @@ export function GameList({ onSelectGame }: GameListProps) {
             className="bg-black/40 border border-cyan-500/30 rounded-lg p-3 cursor-pointer hover:border-cyan-400 hover:bg-black/60 transition-all group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded flex items-center justify-center text-white font-bold">
+              {game.thumbnail ? (
+                <img
+                  src={game.thumbnail}
+                  alt={game.title}
+                  className="w-12 h-12 rounded object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div
+                className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded flex items-center justify-center text-white font-bold"
+                style={{ display: game.thumbnail ? 'none' : 'flex' }}
+              >
                 {game.title.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">

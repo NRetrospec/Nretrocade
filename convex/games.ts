@@ -51,12 +51,6 @@ export const getGame = query({
 export const seedGames = mutation({
   args: {},
   handler: async (ctx) => {
-    // Check if games already exist
-    const existingGames = await ctx.db.query("games").take(1);
-    if (existingGames.length > 0) {
-      return "Games already seeded";
-    }
-
     const games = [
       {
         title: "Bloons Tower Defense",
@@ -102,10 +96,59 @@ export const seedGames = mutation({
         difficulty: "Medium" as const,
         playCount: 0,
       },
+      {
+        title: "PPG Brawl",
+        swfUrl: "https://phreshhhhh.github.io/PP-G/301661_ppg_newgrounds202c.swf",
+        thumbnail: "/thumbnails/stickwar.jpg",
+        description: "Fighting game",
+        tags: ["Action"],
+        isMultiplayer: false,
+        category: "Action",
+        difficulty: "Medium" as const,
+        playCount: 0,
+      },
+      // Add more games here
+      {
+        title: "Pac-Man Platformer",
+        swfUrl: "https://phreshhhhh.github.io/pacmanplatform/pacman%20Platformer",
+        thumbnail: "https://i.postimg.cc/QdHCh2yd/Pacmanplatform-PIC.png",
+        description: "Classic arcade maze game",
+        tags: ["Arcade", "Classic", "Maze"],
+        isMultiplayer: false,
+        category: "Platform",
+        difficulty: "Easy" as const,
+        playCount: 0,
+      },
+      {
+        title: "Tetris",
+        swfUrl: "/games/tetris.swf",
+        thumbnail: "/thumbnails/tetris.jpg",
+        description: "Puzzle game of falling blocks",
+        tags: ["Puzzle", "Classic", "Strategy"],
+        isMultiplayer: false,
+        category: "Puzzle",
+        difficulty: "Medium" as const,
+        playCount: 0,
+      },
+      {
+        title: "Super Mario Bros",
+        swfUrl: "/games/mario.swf",
+        thumbnail: "/thumbnails/mario.jpg",
+        description: "Platform adventure game",
+        tags: ["Platform", "Adventure", "Classic"],
+        isMultiplayer: false,
+        category: "Adventure",
+        difficulty: "Medium" as const,
+        playCount: 0,
+      },
     ];
 
     for (const game of games) {
-      await ctx.db.insert("games", game);
+      // Check if game already exists to avoid duplicates
+      const existing = await ctx.db.query("games").filter(q => q.eq(q.field("title"), game.title)).take(1);
+      if (existing.length === 0) {
+        await ctx.db.insert("games", game);
+      }
     }
 
     return "Games seeded successfully";
