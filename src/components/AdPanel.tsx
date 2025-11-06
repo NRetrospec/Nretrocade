@@ -31,15 +31,22 @@ export function AdPanel() {
                 <h3 className="text-sm text-cyan-300 font-semibold">{ad.title}</h3>
               </div>
               <div className="h-24 relative">
-                {index === 0 || index === 1 ? (
-                  <video
-                    src={index === 0 ? "/NRETRO-AD1.mp4" : "/NRETRO-AD2.mp4"}
-                    className="w-full h-full object-cover"
-                    muted
-                    loop
-                    autoPlay
-                    playsInline
-                  />
+                {index <= 2 ? (
+                  <a
+                    href="https://nretrospec.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full h-full"
+                  >
+                    <video
+                      src={`/NRETRO-AD${index + 1}.mp4`}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                    />
+                  </a>
                 ) : (
                   /* Placeholder for video ads */
                   <div className="w-full h-full bg-gradient-to-br from-purple-600/20 to-cyan-600/20 flex items-center justify-center">
