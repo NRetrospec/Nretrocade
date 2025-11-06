@@ -30,17 +30,28 @@ export function AdPanel() {
               <div className="p-2 border-b border-cyan-500/30">
                 <h3 className="text-sm text-cyan-300 font-semibold">{ad.title}</h3>
               </div>
-              <div className="flex-1 relative">
-                {/* Placeholder for video ads */}
-                <div className="w-full h-full bg-gradient-to-br from-purple-600/20 to-cyan-600/20 flex items-center justify-center">
-                  <div className="text-center text-gray-400">
-                    <div className="text-2xl mb-2">📺</div>
-                    <p className="text-xs">Video Ad #{index + 1}</p>
-                    <p className="text-xs opacity-60">Muted Autoplay</p>
+              <div className="h-24 relative">
+                {index === 0 || index === 1 ? (
+                  <video
+                    src={index === 0 ? "/NRETRO-AD1.mp4" : "/NRETRO-AD2.mp4"}
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                  />
+                ) : (
+                  /* Placeholder for video ads */
+                  <div className="w-full h-full bg-gradient-to-br from-purple-600/20 to-cyan-600/20 flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <div className="text-2xl mb-2">📺</div>
+                      <p className="text-xs">Video Ad #{index + 1}</p>
+                      <p className="text-xs opacity-60">Muted Autoplay</p>
+                    </div>
                   </div>
-                </div>
+                )}
                 {/* In production, replace with actual video embed */}
-                {/* 
+                {/*
                 <iframe
                   src={ad.videoUrl}
                   className="w-full h-full"
