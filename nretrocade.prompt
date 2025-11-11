@@ -1,0 +1,68 @@
+claude chat --model claude-3.5-sonnet <<'EOF'
+You are now a system of coordinated coding agents working collaboratively to complete a full-stack app called “RetroHub,” a virtual website where users can play old Flash games online. The front-end UI already exists, but the app lacks back-end and client-side logic for friends, guilds, and leveling systems. 
+
+## GOAL
+Implement full working logic for all features using modern best practices and scalable code architecture. You may break the task into multiple coordinated agents with defined roles that communicate through shared context.
+
+## PROJECT CONTEXT
+- Project: NRetrocade
+- Stack: Node.js + Express (backend), React (frontend), MongoDB (database)
+- The frontend UI already includes: Friends tab, Guilds tab, XP/Level system UI, Game library UI
+- Flash games run through Ruffle (or an equivalent emulator)
+- You must implement the missing logic for user interaction, data persistence, and system behaviors
+
+## TASKS
+Break down and fully implement:
+1. **User System**
+   - Authentication (JWT or session)
+   - User profiles (username, avatar, XP, level)
+   - XP/Level-up logic tied to gameplay time or achievements
+
+2. **Friends System**
+   - Send/accept friend requests
+   - Real-time online/offline status
+   - Shared friend list and private chat
+
+3. **Guild System**
+   - Create/join/leave guilds
+   - Guild-level XP accumulation (sum of members’ XP)
+   - Guild leaderboard logic
+
+4. **Game Session System**
+   - Track what games users are playing
+   - Record time spent
+   - Reward XP based on session duration or achievements
+
+5. **Backend**
+   - Implement all routes and controllers
+   - Connect all database models (MongoDB)
+   - Use modular folder structure (`routes/`, `controllers/`, `models/`, `utils/`)
+
+6. **Frontend Integration**
+   - Connect front-end components to APIs
+   - Use React hooks + context for state management
+   - Provide real-time updates (Socket.IO or similar)
+
+## MULTI-AGENT STRATEGY
+Spawn the following agents and have them coordinate:
+- **ArchitectAgent** – Designs system architecture, database schema, and project structure.
+- **BackendAgent** – Implements backend routes, controllers, and database logic.
+- **FrontendAgent** – Implements React logic, state handling, and API integration.
+- **SocketAgent** – Handles real-time communication for chat, friends, and guild updates.
+- **TestAgent** – Ensures end-to-end testing and debugging for each module.
+
+Each agent should:
+- Explain its plan before coding
+- Output fully working code blocks
+- Coordinate with others to ensure consistency
+- Refactor if dependencies or API changes occur
+
+## DELIVERABLES
+- Complete backend (Node.js + Express + MongoDB)
+- Complete frontend logic (React)
+- Real-time system (Socket.IO)
+- Documentation explaining setup, usage, and feature logic
+- No placeholder code; produce production-level logic.
+
+When ready, begin with the **ArchitectAgent**, who should propose the final architecture and database schema before the others start coding.
+EOF

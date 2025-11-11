@@ -1,68 +1,142 @@
 import { useEffect, useRef, useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useUser } from "../contexts/UserContext";
+import { toast } from "sonner";
 
 interface GamePlayerProps {
   game: any;
 }
 
 export function GamePlayer({ game }: GamePlayerProps) {
+  const { currentUser } = useUser();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [playTime, setPlayTime] = useState(0); // in seconds
+  const sessionIdRef = useRef<string | null>(null);
 
+  const startSession = useMutation(api.gameSessions.startSession);
+  const endSession = useMutation(api.gameSessions.endSession);
+  const updateHeartbeat = useMutation(api.gameSessions.updateSessionHeartbeat);
+
+  // Initialize game session
+  useEffect(() => {
+    if (!currentUser?._id || !game._id) return;
+
+    const initSession = async () => {
+      try {
+        const result = await startSession({
+          userId: currentUser._id,
+          gameId: game._id,
+        });
+        sessionIdRef.current = result.sessionId;
+        toast.success("Game session started!", {
+          description: "You'll earn XP while playing!",
+        });
+      } catch (error) {
+        console.error("Failed to start session:", error);
+      }
+    };
+
+    initSession();
+
+    // Cleanup: end session when component unmounts
+    return () => {
+      if (sessionIdRef.current && currentUser._id) {
+        endSession({ userId: currentUser._id, completed: false })
+          .then((result) => {
+            toast.success(`Session ended! +${result.expAwarded} XP`, {
+              description: `Played for ${result.duration} minutes`,
+            });
+          })
+          .catch(console.error);
+      }
+    };
+  }, [currentUser?._id, game._id]);
+
+  // Heartbeat and playtime tracker
+  useEffect(() => {
+    if (!currentUser?._id) return;
+
+    // Update playtime every second
+    const playTimeInterval = setInterval(() => {
+      setPlayTime((prev) => prev + 1);
+    }, 1000);
+
+    // Send heartbeat every 30 seconds
+    const heartbeatInterval = setInterval(() => {
+      if (currentUser._id) {
+        updateHeartbeat({ userId: currentUser._id })
+          .then((result) => {
+            if (result.success) {
+              console.log(`Heartbeat sent. Estimated XP: ${result.estimatedExp}`);
+            }
+          })
+          .catch(console.error);
+      }
+    }, 30 * 1000);
+
+    return () => {
+      clearInterval(playTimeInterval);
+      clearInterval(heartbeatInterval);
+    };
+  }, [currentUser?._id]);
+
+  // Initialize Ruffle player
   useEffect(() => {
     let rufflePlayer: any = null;
 
-   const initRuffle = async () => {
-  try {
-    setIsLoading(true);
-    setError(null);
+    const initRuffle = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-    // Load Ruffle dynamically from CDN if not already present
-    if (!(window as any).RufflePlayer) {
-      await new Promise<void>((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://unpkg.com/@ruffle-rs/ruffle";
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load Ruffle script."));
-        document.body.appendChild(script);
-      });
-    }
+        // Load Ruffle dynamically from CDN if not already present
+        if (!(window as any).RufflePlayer) {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://unpkg.com/@ruffle-rs/ruffle";
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Failed to load Ruffle script."));
+            document.body.appendChild(script);
+          });
+        }
 
-    const Ruffle = (window as any).RufflePlayer;
-    if (!Ruffle) {
-      throw new Error("RufflePlayer not found on window after loading.");
-    }
+        const Ruffle = (window as any).RufflePlayer;
+        if (!Ruffle) {
+          throw new Error("RufflePlayer not found on window after loading.");
+        }
 
-    // Create Ruffle player properly
-    const ruffleInstance = Ruffle.newest();
-    const player = ruffleInstance.createPlayer(); // ✅ this returns an HTMLElement
+        // Create Ruffle player properly
+        const ruffleInstance = Ruffle.newest();
+        const player = ruffleInstance.createPlayer();
 
-    if (!player) {
-      throw new Error("Failed to create Ruffle player element.");
-    }
+        if (!player) {
+          throw new Error("Failed to create Ruffle player element.");
+        }
 
-    // Configure styling
-    player.style.width = "100%";
-    player.style.height = "600px";
-    player.style.border = "2px solid #06b6d4";
-    player.style.borderRadius = "8px";
+        // Configure styling
+        player.style.width = "100%";
+        player.style.height = "600px";
+        player.style.border = "2px solid #06b6d4";
+        player.style.borderRadius = "8px";
 
-    // Append and load
-    if (containerRef.current) {
-      containerRef.current.innerHTML = "";
-      containerRef.current.appendChild(player);
-      await player.load(game.swfUrl);
-    }
+        // Append and load
+        if (containerRef.current) {
+          containerRef.current.innerHTML = "";
+          containerRef.current.appendChild(player);
+          await player.load(game.swfUrl);
+        }
 
-    setIsLoading(false);
-  } catch (err) {
-    console.error("Failed to load Ruffle:", err);
-    setError("Failed to load game. This might be a demo - Ruffle requires actual SWF files.");
-    setIsLoading(false);
-  }
-};
-
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Failed to load Ruffle:", err);
+        setError("Failed to load game. This might be a demo - Ruffle requires actual SWF files.");
+        setIsLoading(false);
+      }
+    };
 
     initRuffle();
 
@@ -72,6 +146,40 @@ export function GamePlayer({ game }: GamePlayerProps) {
       }
     };
   }, [game._id]);
+
+  const handleMarkComplete = async () => {
+    if (!currentUser?._id) return;
+
+    try {
+      const result = await endSession({
+        userId: currentUser._id,
+        completed: true, // Completion bonus!
+      });
+
+      toast.success(`Game completed! +${result.expAwarded} XP`, {
+        description: `Total playtime: ${result.duration} minutes`,
+        duration: 5000,
+      });
+
+      // Restart session to continue playing
+      const newSession = await startSession({
+        userId: currentUser._id,
+        gameId: game._id,
+      });
+      sessionIdRef.current = newSession.sessionId;
+      setPlayTime(0);
+    } catch (error: any) {
+      toast.error("Failed to mark complete", {
+        description: error.message,
+      });
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   if (error) {
     return (
@@ -114,6 +222,11 @@ export function GamePlayer({ game }: GamePlayerProps) {
             {game.isMultiplayer && (
               <div className="text-xs text-cyan-400 mt-1">🌐 Multiplayer</div>
             )}
+            <div className="mt-2 text-sm text-gray-400">
+              <div className="text-xs">Session Time</div>
+              <div className="text-lg font-bold text-purple-400">{formatTime(playTime)}</div>
+              <div className="text-xs text-gray-500">~{Math.floor(playTime / 6)} XP earned</div>
+            </div>
           </div>
         </div>
       </div>
@@ -136,14 +249,15 @@ export function GamePlayer({ game }: GamePlayerProps) {
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
             <button
-              onClick={() => alert("Game completed! Enjoy playing!")}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+              onClick={handleMarkComplete}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors font-semibold"
+              disabled={!currentUser}
             >
-              Mark Complete
+              ✓ Mark Complete (+50 XP Bonus)
             </button>
           </div>
           <div className="text-sm text-gray-400">
-            Enjoy the retro gaming experience!
+            💡 Earn 10 XP per minute played
           </div>
         </div>
       </div>

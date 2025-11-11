@@ -11,6 +11,8 @@
     "lint": "tsc -p convex -noEmit --pretty false && tsc -p . -noEmit --pretty false && convex dev --once && vite build"
   },
   "dependencies": {
+    "@clerk/backend": "^2.21.0",
+    "@clerk/clerk-react": "^5.54.0",
     "@ruffle-rs/ruffle": "^0.2.0-nightly.2025.10.11",
     "animate.css": "^4.1.1",
     "clsx": "^2.1.1",

@@ -10,12 +10,14 @@ export const listGames = query({
   },
   handler: async (ctx, args) => {
     if (args.search) {
+      const searchTerm = args.search; // Narrow the type
       let searchQuery = ctx.db
         .query("games")
-        .withSearchIndex("search_games", (q) => q.search("title", args.search!));
+        .withSearchIndex("search_games", (q) => q.search("title", searchTerm));
 
       if (args.category) {
-        searchQuery = searchQuery.filter((q) => q.eq(q.field("category"), args.category));
+        const category = args.category; // Narrow the type
+        searchQuery = searchQuery.filter((q) => q.eq(q.field("category"), category));
       }
 
       if (args.multiplayerOnly) {
@@ -28,7 +30,8 @@ export const listGames = query({
     let query = ctx.db.query("games");
 
     if (args.category) {
-      query = query.filter((q) => q.eq(q.field("category"), args.category));
+      const category = args.category; // Narrow the type
+      query = query.filter((q) => q.eq(q.field("category"), category));
     }
 
     if (args.multiplayerOnly) {
