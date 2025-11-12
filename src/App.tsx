@@ -255,7 +255,10 @@ function MainApp() {
         <div className="flex-1 flex items-center justify-center p-8">
           {currentView === "home" ? (
             selectedGame ? (
-              <GamePlayer game={selectedGame} />
+              <GamePlayer
+                game={selectedGame}
+                onClose={() => setSelectedGame(null)}
+              />
             ) : (
               <div className="text-center">
                 <div className="text-6xl mb-4">🎮</div>
