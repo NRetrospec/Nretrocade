@@ -192,8 +192,8 @@ export const startSession = mutation({
       const user = await ctx.db.get(args.userId);
       if (user) {
         await ctx.db.patch(args.userId, {
-          exp: user.exp + expAwarded,
-          totalPlaytime: user.totalPlaytime + duration,
+          exp: (user.exp ?? 0) + expAwarded,
+          totalPlaytime: (user.totalPlaytime ?? 0) + duration,
         });
       }
     }
@@ -254,8 +254,8 @@ export const endSession = mutation({
       throw new Error("User not found");
     }
 
-    const newExp = user.exp + expAwarded;
-    const newPlaytime = user.totalPlaytime + duration;
+    const newExp = (user.exp ?? 0) + expAwarded;
+    const newPlaytime = (user.totalPlaytime ?? 0) + duration;
 
     await ctx.db.patch(args.userId, {
       exp: newExp,

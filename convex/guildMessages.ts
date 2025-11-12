@@ -107,7 +107,7 @@ export const sendMessage = mutation({
     const messageId = await ctx.db.insert("guild_messages", {
       guildId: args.guildId,
       userId: args.userId,
-      username: user.username,
+      username: user.username ?? "",
       avatarUrl: user.avatarUrl,
       content: args.content.trim(),
       timestamp: Date.now(),

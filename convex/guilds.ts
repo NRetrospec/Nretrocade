@@ -249,8 +249,8 @@ export const createGuild = mutation({
       ownerId: args.userId,
       isPrivate: args.isPrivate,
       memberCount: 1,
-      totalExp: user.exp, // Start with creator's XP
-      level: user.level,
+      totalExp: user.exp ?? 0, // Start with creator's XP
+      level: user.level ?? 1,
       createdAt: Date.now(),
     });
 
@@ -269,7 +269,7 @@ export const createGuild = mutation({
 
     // Award XP for creating guild
     await ctx.db.patch(args.userId, {
-      exp: user.exp + 100,
+      exp: (user.exp ?? 0) + 100,
     });
 
     return { success: true, guildId };
@@ -328,8 +328,8 @@ export const joinGuild = mutation({
     // Update guild stats
     await ctx.db.patch(args.guildId, {
       memberCount: guild.memberCount + 1,
-      totalExp: guild.totalExp + user.exp,
-      level: calculateLevelFromExp(guild.totalExp + user.exp).level,
+      totalExp: guild.totalExp + (user.exp ?? 0),
+      level: calculateLevelFromExp(guild.totalExp + (user.exp ?? 0)).level,
     });
 
     // Update user's guild
@@ -393,8 +393,8 @@ export const leaveGuild = mutation({
           await ctx.db.patch(user.guildId, {
             ownerId: newOwner.userId,
             memberCount: guild.memberCount - 1,
-            totalExp: guild.totalExp - user.exp,
-            level: calculateLevelFromExp(guild.totalExp - user.exp).level,
+            totalExp: guild.totalExp - (user.exp ?? 0),
+            level: calculateLevelFromExp(guild.totalExp - (user.exp ?? 0)).level,
           });
 
           // Update new owner's role
@@ -440,8 +440,8 @@ export const leaveGuild = mutation({
       // Update guild stats
       await ctx.db.patch(user.guildId, {
         memberCount: guild.memberCount - 1,
-        totalExp: guild.totalExp - user.exp,
-        level: calculateLevelFromExp(guild.totalExp - user.exp).level,
+        totalExp: guild.totalExp - (user.exp ?? 0),
+        level: calculateLevelFromExp(guild.totalExp - (user.exp ?? 0)).level,
       });
     }
 
@@ -607,8 +607,8 @@ export const kickMember = mutation({
     // Update guild stats
     await ctx.db.patch(args.guildId, {
       memberCount: guild.memberCount - 1,
-      totalExp: guild.totalExp - memberToKick.exp,
-      level: calculateLevelFromExp(guild.totalExp - memberToKick.exp).level,
+      totalExp: guild.totalExp - (memberToKick.exp ?? 0),
+      level: calculateLevelFromExp(guild.totalExp - (memberToKick.exp ?? 0)).level,
     });
 
     // Update kicked user

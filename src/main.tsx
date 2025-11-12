@@ -19,7 +19,12 @@ createRoot(document.getElementById("root")!).render(
   <ClerkProvider publishableKey={clerkPubKey}>
     <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
       <UserProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <App />
         </BrowserRouter>
       </UserProvider>

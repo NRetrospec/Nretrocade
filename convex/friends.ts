@@ -43,12 +43,12 @@ export const getFriends = query({
         return {
           _id: user._id,
           userId: user.userId,
-          username: user.username,
+          username: user.username ?? "",
           avatarUrl: user.avatarUrl,
           level: user.level,
-          exp: user.exp,
-          isOnline: isUserOnline(user.lastSeen),
-          lastSeen: user.lastSeen,
+          exp: user.exp ?? 0,
+          isOnline: isUserOnline(user.lastSeen ?? 0),
+          lastSeen: user.lastSeen ?? 0,
         };
       })
     );
@@ -60,7 +60,7 @@ export const getFriends = query({
         if (a.isOnline !== b.isOnline) {
           return a.isOnline ? -1 : 1;
         }
-        return a.username.localeCompare(b.username);
+        return (a.username ?? "").localeCompare(b.username ?? "");
       });
   },
 });
@@ -335,7 +335,7 @@ export const acceptFriendRequest = mutation({
     const recipient = await ctx.db.get(request.recipientId);
     if (recipient) {
       await ctx.db.patch(request.recipientId, {
-        exp: recipient.exp + 10,
+        exp: (recipient.exp ?? 0) + 10,
       });
     }
 

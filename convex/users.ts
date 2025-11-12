@@ -30,12 +30,12 @@ export const getProfile = query({
     if (!user) return null;
 
     // Calculate level info from XP
-    const levelInfo = calculateLevelFromExp(user.exp);
+    const levelInfo = calculateLevelFromExp(user.exp ?? 0);
 
     return {
       ...user,
       levelInfo,
-      isOnline: isUserOnline(user.lastSeen),
+      isOnline: isUserOnline(user.lastSeen ?? 0),
     };
   },
 });
@@ -49,12 +49,12 @@ export const getProfileById = query({
     const user = await ctx.db.get(args.id);
     if (!user) return null;
 
-    const levelInfo = calculateLevelFromExp(user.exp);
+    const levelInfo = calculateLevelFromExp(user.exp ?? 0);
 
     return {
       ...user,
       levelInfo,
-      isOnline: isUserOnline(user.lastSeen),
+      isOnline: isUserOnline(user.lastSeen ?? 0),
     };
   },
 });
@@ -73,8 +73,8 @@ export const getProfilesByIds = query({
       .filter((user) => user !== null)
       .map((user) => ({
         ...user,
-        levelInfo: calculateLevelFromExp(user.exp),
-        isOnline: isUserOnline(user.lastSeen),
+        levelInfo: calculateLevelFromExp(user.exp ?? 0),
+        isOnline: isUserOnline(user.lastSeen ?? 0),
       }));
   },
 });
@@ -120,12 +120,12 @@ export const getLeaderboard = query({
       rank: index + 1,
       _id: user._id,
       userId: user.userId,
-      username: user.username,
+      username: user.username ?? "",
       avatarUrl: user.avatarUrl,
       level: user.level,
-      exp: user.exp,
-      totalPlaytime: user.totalPlaytime,
-      levelInfo: calculateLevelFromExp(user.exp),
+      exp: user.exp ?? 0,
+      totalPlaytime: user.totalPlaytime ?? 0,
+      levelInfo: calculateLevelFromExp(user.exp ?? 0),
     }));
   },
 });
@@ -145,18 +145,18 @@ export const searchUsers = query({
 
     const filtered = allUsers
       .filter((user) =>
-        user.username.toLowerCase().includes(searchLower)
+        (user.username ?? "").toLowerCase().includes(searchLower)
       )
       .slice(0, limit);
 
     return filtered.map((user) => ({
       _id: user._id,
       userId: user.userId,
-      username: user.username,
+      username: user.username ?? "",
       avatarUrl: user.avatarUrl,
       level: user.level,
-      exp: user.exp,
-      isOnline: isUserOnline(user.lastSeen),
+      exp: user.exp ?? 0,
+      isOnline: isUserOnline(user.lastSeen ?? 0),
     }));
   },
 });
@@ -314,7 +314,7 @@ export const getCurrentUser = query({
     return {
       ...user,
       levelInfo,
-      isOnline: isUserOnline(user.lastSeen),
+      isOnline: isUserOnline(user.lastSeen ?? 0),
     };
   },
 });
@@ -389,8 +389,8 @@ export const addExp = mutation({
       throw new Error("User not found");
     }
 
-    const newExp = user.exp + args.expAmount;
-    const oldLevelInfo = calculateLevelFromExp(user.exp);
+    const newExp = (user.exp ?? 0) + args.expAmount;
+    const oldLevelInfo = calculateLevelFromExp(user.exp ?? 0);
     const newLevelInfo = calculateLevelFromExp(newExp);
 
     const leveledUp = newLevelInfo.level > oldLevelInfo.level;
@@ -441,7 +441,7 @@ export const updatePlaytime = mutation({
     }
 
     await ctx.db.patch(args.userId, {
-      totalPlaytime: user.totalPlaytime + args.minutesPlayed,
+      totalPlaytime: (user.totalPlaytime ?? 0) + args.minutesPlayed,
       lastSeen: Date.now(),
     });
 
