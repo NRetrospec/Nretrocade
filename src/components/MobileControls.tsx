@@ -1,4 +1,4 @@
-import { useState, useCallback, TouchEvent } from 'react';
+import { useState, useCallback, useEffect, TouchEvent } from 'react';
 import './MobileControls.css';
 
 interface MobileControlsProps {
@@ -6,6 +6,8 @@ interface MobileControlsProps {
   onButtonUp: (key: string) => void;
   onFocus?: () => void;
 }
+
+const STORAGE_KEY = 'nretrocade-controls-visible';
 
 interface ButtonConfig {
   key: string;
@@ -36,6 +38,52 @@ const ACTION_BUTTONS: ButtonConfig[] = [
  */
 export function MobileControls({ onButtonDown, onButtonUp, onFocus }: MobileControlsProps) {
   const [activeButtons, setActiveButtons] = useState<Set<string>>(new Set());
+
+  // Controls visibility state - load from localStorage or default to true
+  const [controlsVisible, setControlsVisible] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored !== null ? JSON.parse(stored) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  /**
+   * Save controls visibility preference to localStorage
+   */
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(controlsVisible));
+    } catch (error) {
+      console.warn('[MobileControls] Failed to save visibility preference:', error);
+    }
+  }, [controlsVisible]);
+
+  /**
+   * Get Ruffle canvas for refocusing after toggle
+   */
+  const getRuffleCanvas = useCallback((): HTMLCanvasElement | null => {
+    const rufflePlayer = document.querySelector('ruffle-player');
+    if (!rufflePlayer || !rufflePlayer.shadowRoot) return null;
+    return rufflePlayer.shadowRoot.querySelector('canvas') as HTMLCanvasElement | null;
+  }, []);
+
+  /**
+   * Toggle controls visibility and immediately refocus Ruffle canvas
+   */
+  const toggleControls = useCallback(() => {
+    setControlsVisible(prev => !prev);
+
+    // Refocus canvas after toggle to ensure input continues working
+    setTimeout(() => {
+      const canvas = getRuffleCanvas();
+      if (canvas) {
+        canvas.focus({ preventScroll: true });
+        console.log('[MobileControls] Canvas refocused after toggle');
+      }
+    }, 100);
+  }, [getRuffleCanvas]);
 
   /**
    * Handle touch start - must prevent default to avoid iOS zoom/scroll
@@ -127,39 +175,55 @@ export function MobileControls({ onButtonDown, onButtonUp, onFocus }: MobileCont
 
   return (
     <div className="mobile-controls">
-      {/* D-Pad Container - Bottom Left */}
-      <div className="dpad-container">
-        <div className="dpad-grid">
-          {renderDPadButton('up', 'ArrowUp')}
-          {renderDPadButton('left', 'ArrowLeft')}
-          <div className="dpad-center" />
-          {renderDPadButton('right', 'ArrowRight')}
-          {renderDPadButton('down', 'ArrowDown')}
+      {/* Fadeable Controls Wrapper */}
+      <div className={`controls-wrapper ${!controlsVisible ? 'hidden' : ''}`}>
+        {/* D-Pad Container - Bottom Left */}
+        <div className="dpad-container">
+          <div className="dpad-grid">
+            {renderDPadButton('up', 'ArrowUp')}
+            {renderDPadButton('left', 'ArrowLeft')}
+            <div className="dpad-center" />
+            {renderDPadButton('right', 'ArrowRight')}
+            {renderDPadButton('down', 'ArrowDown')}
+          </div>
+        </div>
+
+        {/* Action Buttons - Bottom Right */}
+        <div className="action-container">
+          {/* Primary cluster (Z, X) */}
+          <div className="action-cluster primary-cluster">
+            {ACTION_BUTTONS.filter(b => b.style === 'primary').map(renderActionButton)}
+          </div>
+
+          {/* Secondary cluster (C, E, F, Shift, Ctrl) */}
+          <div className="action-cluster secondary-cluster">
+            {ACTION_BUTTONS.filter(b => b.style === 'secondary').map(renderActionButton)}
+          </div>
+
+          {/* Special buttons (Space, Enter) */}
+          <div className="action-cluster special-cluster">
+            {ACTION_BUTTONS.filter(b => b.style === 'special').map(renderActionButton)}
+          </div>
+        </div>
+
+        {/* Controller Connection Indicator */}
+        <div className="controller-indicator">
+          🎮 Controller Ready
         </div>
       </div>
 
-      {/* Action Buttons - Bottom Right */}
-      <div className="action-container">
-        {/* Primary cluster (Z, X) */}
-        <div className="action-cluster primary-cluster">
-          {ACTION_BUTTONS.filter(b => b.style === 'primary').map(renderActionButton)}
-        </div>
-
-        {/* Secondary cluster (C, E, F, Shift, Ctrl) */}
-        <div className="action-cluster secondary-cluster">
-          {ACTION_BUTTONS.filter(b => b.style === 'secondary').map(renderActionButton)}
-        </div>
-
-        {/* Special buttons (Space, Enter) */}
-        <div className="action-cluster special-cluster">
-          {ACTION_BUTTONS.filter(b => b.style === 'special').map(renderActionButton)}
-        </div>
-      </div>
-
-      {/* Controller Connection Indicator */}
-      <div className="controller-indicator">
-        🎮 Controller Ready
-      </div>
+      {/* Toggle Button - Always Visible at Bottom Center */}
+      <button
+        className="controls-toggle"
+        onClick={toggleControls}
+        aria-label={controlsVisible ? 'Hide controls' : 'Show controls'}
+        title={controlsVisible ? 'Hide controls' : 'Show controls'}
+      >
+        <span className="toggle-icon">{controlsVisible ? '🎮' : '👆'}</span>
+        <span className="toggle-text">
+          {controlsVisible ? 'Hide' : 'Show'}
+        </span>
+      </button>
     </div>
   );
 }
