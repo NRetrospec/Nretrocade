@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import { useUser } from "../contexts/UserContext";
 import { toast } from "sonner";
 import { useMobileDetection } from "../hooks/useMobileDetection";
+import { useGameInput } from "../hooks/useGameInput";
+import { MobileControls } from "./MobileControls";
 
 interface GamePlayerProps {
   game: any;
@@ -23,6 +25,12 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
   const startSession = useMutation(api.gameSessions.startSession);
   const endSession = useMutation(api.gameSessions.endSession);
   const updateHeartbeat = useMutation(api.gameSessions.updateSessionHeartbeat);
+
+  // Unified input system for touch controls and gamepad
+  const { handleButtonDown, handleButtonUp, focusCanvas } = useGameInput({
+    enabled: isMobile && !isLoading && !error,
+    ruffleRef: containerRef,
+  });
 
   // Prevent body scroll on mobile when game is active
   useEffect(() => {
@@ -426,6 +434,15 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
             💡 10 XP/min
           </div>
         </div>
+      )}
+
+      {/* Mobile On-Screen Controls + Gamepad Support */}
+      {isMobile && !isLoading && !error && (
+        <MobileControls
+          onButtonDown={handleButtonDown}
+          onButtonUp={handleButtonUp}
+          onFocus={focusCanvas}
+        />
       )}
     </div>
   );
