@@ -144,11 +144,25 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
 
         // Initial styling based on current mobile/desktop state
         if (isMobile) {
-          // Mobile: fullscreen-like dimensions
-          player.style.width = "100vw";
-          player.style.height = `${viewport.height - 120}px`; // Subtract space for header/controls
+          // Detect iOS for iOS-specific initial sizing
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+          if (isIOS && window.visualViewport) {
+            // iOS: Use visualViewport for accurate initial dimensions
+            const actualWidth = window.visualViewport.width;
+            const actualHeight = window.visualViewport.height;
+            player.style.width = `${actualWidth}px`;
+            player.style.height = `${actualHeight - 120}px`;
+          } else {
+            // Android: Standard viewport units
+            player.style.width = "100vw";
+            player.style.height = `${viewport.height - 120}px`;
+          }
+
           player.style.border = "none";
           player.style.borderRadius = "0";
+          player.style.position = "relative";
+          player.style.display = "block";
         } else {
           // Desktop: fixed container
           player.style.width = "100%";
@@ -190,6 +204,9 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
     // Only resize if player exists and is mobile
     if (!rufflePlayerRef.current || !isMobile) return;
 
+    // Detect iOS devices for iOS-specific handling
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
     const resizePlayer = () => {
       const player = rufflePlayerRef.current;
       if (!player) return;
@@ -197,14 +214,43 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
       // Dynamically update player dimensions based on current viewport
       const newHeight = viewport.height - 120; // Subtract header/controls space
 
-      player.style.width = "100vw";
-      player.style.height = `${newHeight}px`;
+      if (isIOS) {
+        // iOS-specific: Force layout recalculation to ensure proper rendering
+        // Use visualViewport dimensions if available for pixel-perfect sizing
+        const actualWidth = window.visualViewport?.width || viewport.width;
+        const actualHeight = window.visualViewport?.height || viewport.height;
+        const adjustedHeight = actualHeight - 120;
 
-      console.log(`Ruffle player resized: ${viewport.width}x${newHeight}`);
+        // Apply dimensions with important flag to override any conflicts
+        player.style.width = `${actualWidth}px`;
+        player.style.height = `${adjustedHeight}px`;
+        player.style.position = 'relative';
+        player.style.display = 'block';
+
+        // Force browser to recalculate layout
+        void player.offsetHeight;
+
+        console.log(`[iOS] Ruffle player resized: ${actualWidth}x${adjustedHeight} (viewport: ${actualHeight})`);
+      } else {
+        // Android/Desktop: Standard viewport units work fine
+        player.style.width = "100vw";
+        player.style.height = `${newHeight}px`;
+
+        console.log(`Ruffle player resized: ${viewport.width}x${newHeight}`);
+      }
     };
 
     // Resize immediately when viewport changes
     resizePlayer();
+
+    // iOS-specific: Add additional resize after a short delay to catch late updates
+    if (isIOS) {
+      const timeoutId = setTimeout(() => {
+        resizePlayer();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
 
   }, [isMobile, viewport.width, viewport.height]); // React to viewport changes
 
@@ -325,7 +371,15 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
       </div>
 
       {/* Game Container */}
-      <div className={`bg-black relative ${isMobile ? 'flex-1' : 'border-x border-cyan-500/50'}`}>
+      <div className={`bg-black relative ${isMobile ? 'flex-1 overflow-hidden' : 'border-x border-cyan-500/50'}`}
+        style={isMobile ? {
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'none'
+        } : {}}>
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
             <div className="text-center">
@@ -334,7 +388,8 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
             </div>
           </div>
         )}
-        <div ref={containerRef} className={`w-full ${isMobile ? 'h-full' : 'min-h-[600px]'}`} />
+        <div ref={containerRef} className={`w-full ${isMobile ? 'h-full' : 'min-h-[600px]'}`}
+          style={isMobile ? { overflow: 'hidden', position: 'relative' } : {}} />
       </div>
 
       {/* Game Controls - Desktop Only */}
