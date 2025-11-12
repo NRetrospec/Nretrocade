@@ -14,6 +14,7 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
   const { currentUser } = useUser();
   const { isMobile, viewport } = useMobileDetection();
   const containerRef = useRef<HTMLDivElement>(null);
+  const rufflePlayerRef = useRef<any>(null); // Store Ruffle player instance for resizing
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playTime, setPlayTime] = useState(0); // in seconds
@@ -109,10 +110,8 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
     };
   }, [currentUser?._id]);
 
-  // Initialize Ruffle player
+  // Initialize Ruffle player (only when game changes)
   useEffect(() => {
-    let rufflePlayer: any = null;
-
     const initRuffle = async () => {
       try {
         setIsLoading(true);
@@ -143,7 +142,7 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
           throw new Error("Failed to create Ruffle player element.");
         }
 
-        // Configure styling based on mobile/desktop
+        // Initial styling based on current mobile/desktop state
         if (isMobile) {
           // Mobile: fullscreen-like dimensions
           player.style.width = "100vw";
@@ -165,8 +164,9 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
           await player.load(game.swfUrl);
         }
 
+        // Store player reference for resizing
+        rufflePlayerRef.current = player;
         setIsLoading(false);
-        rufflePlayer = player;
       } catch (err) {
         console.error("Failed to load Ruffle:", err);
         setError("Failed to load game. This might be a demo - Ruffle requires actual SWF files.");
@@ -177,11 +177,36 @@ export function GamePlayer({ game, onClose }: GamePlayerProps) {
     initRuffle();
 
     return () => {
-      if (rufflePlayer && rufflePlayer.remove) {
-        rufflePlayer.remove();
+      // Cleanup on unmount or game change
+      if (rufflePlayerRef.current && rufflePlayerRef.current.remove) {
+        rufflePlayerRef.current.remove();
       }
+      rufflePlayerRef.current = null;
     };
-  }, [game._id, isMobile, viewport]);
+  }, [game._id]); // Only reinitialize when game changes, NOT on viewport/isMobile change
+
+  // Handle viewport/orientation changes - resize without reloading
+  useEffect(() => {
+    // Only resize if player exists and is mobile
+    if (!rufflePlayerRef.current || !isMobile) return;
+
+    const resizePlayer = () => {
+      const player = rufflePlayerRef.current;
+      if (!player) return;
+
+      // Dynamically update player dimensions based on current viewport
+      const newHeight = viewport.height - 120; // Subtract header/controls space
+
+      player.style.width = "100vw";
+      player.style.height = `${newHeight}px`;
+
+      console.log(`Ruffle player resized: ${viewport.width}x${newHeight}`);
+    };
+
+    // Resize immediately when viewport changes
+    resizePlayer();
+
+  }, [isMobile, viewport.width, viewport.height]); // React to viewport changes
 
   const handleMarkComplete = async () => {
     if (!currentUser?._id) return;
